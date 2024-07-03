@@ -3,12 +3,12 @@
  * @Email: amirjavadi25@gmail.com
  * @Date: 2024-07-02 21:36:57
  * @Last Modified by: AJ Javadi
- * @Last Modified time: 2024-07-02 23:30:49
+ * @Last Modified time: 2024-07-02 23:52:17
  * @Description: file:///Users/aj/sandbox/lydia/src/App.js
  * - create an audio context and oscillators for different waverorms
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Midi } from "@tonejs/midi";
 import "./App.css";
 
@@ -35,13 +35,21 @@ const App = () => {
   };
 
   // start an oscillator
-  const startOscillator = (oscillator) => {
-    oscillator.start();
+  const startOscillator = (oscillator, time) => {
+    if (isFinite(time)) {
+      oscillator.start(time);
+    } else {
+      console.error("Invalid start time:", time);
+    }
   };
 
   // stop oscillator
-  const stopOscillator = (oscillator) => {
-    oscillator.stop();
+  const stopOscillator = (oscillator, time) => {
+    if (isFinite(time)) {
+      oscillator.stop(time);
+    } else {
+      console.error("Invalid stop time:", time);
+    }
   };
 
   // Generate a random pattern based on the selected scale
@@ -63,9 +71,9 @@ const App = () => {
 
     currentPattern.forEach((note) => {
       const osc = createOscillator(note.type);
-      osc.start(audioContext.curentTime + note.time);
-      osc.stop(audioContext.curentTime + note.time);
-      osc.stop(audioContext.currentTime + note.time + 0.25);
+      const startTime = audioContext.currentTime + note.time;
+      startOscillator(osc, startTime);
+      stopOscillator(osc, startTime + 0.25);
     });
   };
 
@@ -79,15 +87,16 @@ const App = () => {
     currentPattern.forEach((note) => {
       const osc = createOscillator(note.type);
       osc.connect(mediaStreamDestination);
-      osc.start(audioContext.curentTime + note.time);
-      osc.stop(audioContext.curentTime + note.time + 0.25);
+      const startTime = audioContext.currentTime + note.time;
+      startOscillator(osc, startTime);
+      stopOscillator(osc, startTime + 0.25);
     });
 
     mediaRecorder.start();
 
     setTimeout(() => {
       mediaRecorder.stop();
-    }, 5000); // Record for 5 seconds  //TODO: change to as long as they want
+    }, 10000); // Record for 10 seconds  //TODO: change to as long as they want
 
     mediaRecorder.ondataavailable = (e) => {
       const blob = new Blob([e.data], { type: "audio/wav" });
@@ -116,7 +125,7 @@ const App = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "sequence.mid"; //TODO: add timestampp to the end of the sequence.mid name
+    a.download = "sequence.mid"; //TODO: add timestamp to the end of the sequence.mid name
     a.click();
   };
 
@@ -128,7 +137,7 @@ const App = () => {
       <header className="App-header">
         <h1>Lydia -- The Online Sequencer </h1>
         <article>
-          <p> Courtey of AJ Javadi </p>
+          <p> Courtesy of AJ Javadi </p>
         </article>
         <div>
           <button onClick={generatePattern}>Generate Pattern</button>

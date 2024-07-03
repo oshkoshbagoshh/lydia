@@ -1,0 +1,31 @@
+// App.scss
+
+$colors: (
+  sine: #ff6347,
+  square: #4682b4,
+  sawtooth: #32cd32,
+  triangle: #ffa500
+);
+
+.note {
+  width: 50px;
+  height: 50px;
+  display: inline-block;
+  margin: 5px;
+  background-color: #eee;
+  &.active {
+    background-color: map-get($colors, sine);
+  }
+}
+
+.note.square.active {
+  background-color: map-get($colors, square);
+}
+
+.note.sawtooth.active {
+  background-color: map-get($colors, sawtooth);
+}
+
+.note.triangle.active {
+  background-color: map-get($colors, triangle);
+}
