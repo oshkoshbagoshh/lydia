@@ -203,3 +203,10 @@ Now you have a basic drum machine/sequencer that can generate random patterns, p
 ————-
 
 * allow for samples to be added and dragged in 
+
+
+
+---
+## Issues:
+
+![alt text](image.png)

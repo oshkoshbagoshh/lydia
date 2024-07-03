@@ -3,7 +3,7 @@
  * @Email: amirjavadi25@gmail.com
  * @Date: 2024-07-02 21:36:57
  * @Last Modified by: AJ Javadi
- * @Last Modified time: 2024-07-02 23:14:39
+ * @Last Modified time: 2024-07-02 23:15:20
  * @Description: file:///Users/aj/sandbox/lydia/src/App.js
  * - create an audio context and oscillators for different waverorms
  */
@@ -109,9 +109,9 @@ const App = () => {
         </article>
         <div>
           <button onClick={generatePattern}>Generate Pattern</button>
-          <button onClick={playPattern}>Play Pattern</button>}
-          <button onClick={recordAudio}>Record Audio</button>}
-          <button onClick={exportMidi}>Export MIDI</button>}
+          <button onClick={playPattern}>Play Pattern</button>
+          <button onClick={recordAudio}>Record Audio</button>
+          <button onClick={exportMidi}>Export MIDI</button>
         </div>
       </header>
     </div>
