@@ -1,36 +1,96 @@
-/*
- * @Author: AJ Javadi
- * @Email: amirjavadi25@gmail.com
- * @Date: 2024-07-02 21:36:57
- * @Last Modified by: AJ Javadi
- * @Last Modified time: 2024-07-02 23:52:17
- * @Description: file:///Users/aj/sandbox/lydia/src/App.js
- * - create an audio context and oscillators for different waverorms
- */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Midi } from "@tonejs/midi";
+import * as d3 from "d3";
 import "./App.css";
+import "./App.scss";
 
 // initialize the app
 const App = () => {
   const [audioContext, setAudioContext] = useState(null);
-  const [oscillators, setOscillators] = useState([]);
+  const [gainNode, setGainNode] = useState(null);
+  const [eqNodes, setEqNodes] = useState([]);
+  const [delayNode, setDelayNode] = useState(null);
+  const [filterNode, setFilterNode] = useState(null);
+  const [reverbNode, setReverbNode] = useState(null);
   const [currentPattern, setCurrentPattern] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(120); // 120 BPM
   const [scale, setScale] = useState("C"); // C Major
+  const [duration, setDuration] = useState(4); // 4 bars
+  const gainRef = useRef(null);
+  const delayRef = useRef(null);
+  const filterRef = useRef(null);
+  const reverbRef = useRef(null);
 
   useEffect(() => {
     const context = new (window.AudioContext || window.webkitAudioContext)();
+    const gain = context.createGain();
+    const delay = context.createDelay();
+    const filter = context.createBiquadFilter();
+    const reverb = context.createConvolver();
+    const eq = [
+      createEqNode(context, 32),
+      createEqNode(context, 64),
+      createEqNode(context, 125),
+      createEqNode(context, 250),
+      createEqNode(context, 500),
+      createEqNode(context, 1000),
+      createEqNode(context, 2000),
+      createEqNode(context, 4000),
+      createEqNode(context, 8000),
+      createEqNode(context, 16000),
+    ];
+
+    gain.connect(context.destination);
+    eq.forEach((node, i) => {
+      if (i === 0) {
+        node.connect(gain);
+      } else {
+        eq[i - 1].connect(node);
+      }
+    });
+    filter.connect(eq[eq.length - 1]);
+    delay.connect(filter);
+    reverb.connect(delay);
     setAudioContext(context);
+    setGainNode(gain);
+    setDelayNode(delay);
+    setFilterNode(filter);
+    setReverbNode(reverb);
+    setEqNodes(eq);
   }, []);
+
+  useEffect(() => {
+    if (gainNode) {
+      gainNode.gain.value = gainRef.current.value;
+    }
+    if (delayNode) {
+      delayNode.delayTime.value = delayRef.current.value;
+    }
+    if (filterNode) {
+      filterNode.frequency.value = filterRef.current.value;
+    }
+    if (reverbNode) {
+      // Reverb settings would typically involve loading an impulse response file
+      // For simplicity, we are not changing the reverb settings dynamically here
+    }
+  }, [gainNode, delayNode, filterNode, reverbNode]);
+
+  const createEqNode = (context, frequency) => {
+    const eq = context.createBiquadFilter();
+    eq.type = "peaking";
+    eq.frequency.value = frequency;
+    eq.Q.value = 1;
+    eq.gain.value = 0;
+    return eq;
+  };
 
   //  create an oscillator
   const createOscillator = (type) => {
     const osc = audioContext.createOscillator();
     osc.type = type;
-    osc.connect(audioContext.destination);
+    osc.connect(reverbNode);
     return osc;
   };
 
@@ -53,15 +113,29 @@ const App = () => {
   };
 
   // Generate a random pattern based on the selected scale
-  // for simplicity, we will use a fixed pattern here
   const generatePattern = () => {
-    // TODO: change this to random later
-    const pattern = [
-      { time: 0, type: "sine" },
-      { time: 0.5, type: "square" },
-      { time: 1, type: "sawtooth" },
-      { time: 1.5, type: "triangle" },
-    ];
+    const scales = {
+      C: ["C", "D", "E", "F", "G", "A", "B"],
+      G: ["G", "A", "B", "C", "D", "E", "F#"],
+      D: ["D", "E", "F#", "G", "A", "B", "C#"],
+      A: ["A", "B", "C#", "D", "E", "F#", "G#"],
+      E: ["E", "F#", "G#", "A", "B", "C#", "D#"],
+      B: ["B", "C#", "D#", "E", "F#", "G#", "A#"],
+      F: ["F", "G", "A", "Bb", "C", "D", "E"],
+    };
+
+    const scaleNotes = scales[scale];
+    const waveforms = ["sine", "square", "sawtooth", "triangle"];
+    const pattern = [];
+    const noteDuration = (60 / bpm) / 2; // Each note lasts for half a beat
+    const totalNotes = (duration * bpm) / 30; // Total notes based on duration and BPM
+
+    for (let i = 0; i < totalNotes; i++) {
+      const time = i * noteDuration;
+      const type = waveforms[Math.floor(Math.random() * waveforms.length)];
+      pattern.push({ time, type });
+    }
+
     setCurrentPattern(pattern);
   };
 
@@ -69,35 +143,48 @@ const App = () => {
   const playPattern = () => {
     if (!audioContext || !currentPattern.length) return;
 
+    const noteDuration = (60 / bpm) / 2; // Each note lasts for half a beat
+
     currentPattern.forEach((note) => {
       const osc = createOscillator(note.type);
       const startTime = audioContext.currentTime + note.time;
       startOscillator(osc, startTime);
-      stopOscillator(osc, startTime + 0.25);
+      stopOscillator(osc, startTime + noteDuration);
+
+      // Update the visualization
+      d3.select(`#note-${note.time}`)
+        .classed("active", true)
+        .transition()
+        .delay(startTime * 1000)
+        .duration(noteDuration * 1000)
+        .classed("active", false);
     });
   };
 
+  // return
+  // JSX
+  
   //  EXPORTS
-
+  
   //  record Audio
   const recordAudio = () => {
     const mediaStreamDestination = audioContext.createMediaStreamDestination();
     const mediaRecorder = new MediaRecorder(mediaStreamDestination.stream);
-
+  
     currentPattern.forEach((note) => {
       const osc = createOscillator(note.type);
       osc.connect(mediaStreamDestination);
       const startTime = audioContext.currentTime + note.time;
       startOscillator(osc, startTime);
-      stopOscillator(osc, startTime + 0.25);
+      stopOscillator(osc, startTime + noteDuration);
     });
-
+  
     mediaRecorder.start();
-
+  
     setTimeout(() => {
       mediaRecorder.stop();
-    }, 10000); // Record for 10 seconds  //TODO: change to as long as they want
-
+    }, duration * 60 * 1000 / bpm); // Record for the duration specified
+  
     mediaRecorder.ondataavailable = (e) => {
       const blob = new Blob([e.data], { type: "audio/wav" });
       const url = URL.createObjectURL(blob);
@@ -107,17 +194,20 @@ const App = () => {
       a.click();
     };
   };
-
+  
+  
   //  export MIDI
-
+  ;
+  
   const exportMidi = () => {
     const midi = new Midi();
     const track = midi.addTrack();
+  
     currentPattern.forEach((note) => {
       track.addNote({
-        midi: 60, // Middle C //TODO: need to create a doc with all of the standard MIDIs
+        midi: 60, // Middle C
         time: note.time,
-        duration: 0.25,
+        duration: noteDuration,
       });
     });
     const midiData = midi.toArray();
@@ -125,29 +215,26 @@ const App = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "sequence.mid"; //TODO: add timestamp to the end of the sequence.mid name
-    a.click();
+    a.download = "sequence.mid";
   };
-
+  
   // return
   // JSX
-
+  
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Lydia -- The Online Sequencer </h1>
-        <article>
-          <p> Courtesy of AJ Javadi </p>
-        </article>
-        <div>
-          <button onClick={generatePattern}>Generate Pattern</button>
-          <button onClick={playPattern}>Play Pattern</button>
-          <button onClick={recordAudio}>Record Audio</button>
-          <button onClick={exportMidi}>Export MIDI</button>
-        </div>
-      </header>
+      <h1>Audio Synthesizer</h1>
+      <div className="controls">
+        <label>
+          BPM:
+          <input
+            type="number"
+            value={bpm}
+            onChange={(e) => setBpm(e.target.value)}
+            />
+        </label>
+      </div>
     </div>
   );
-};
 
-export default App;
+}
