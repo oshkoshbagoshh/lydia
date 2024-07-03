@@ -3,7 +3,7 @@
  * @Email: amirjavadi25@gmail.com
  * @Date: 2024-07-02 21:36:57
  * @Last Modified by: AJ Javadi
- * @Last Modified time: 2024-07-02 22:17:11
+ * @Last Modified time: 2024-07-02 23:14:39
  * @Description: file:///Users/aj/sandbox/lydia/src/App.js
  * - create an audio context and oscillators for different waverorms
  */
@@ -57,18 +57,65 @@ const App = () => {
     setCurrentPattern(pattern);
   };
 
+  // play the pattern (if there is audio context and if the pattern is not over)
+  const playPattern = () => {
+    if (!audioContext || !currentPattern.length) return;
 
-const playPattern = () => {
-  if (!audioContext || !currentPattern.length) return;
-  
-  currentPattern.forEach(note => {
-    const osc = createOscillator(note.type);
-    osc.start(audioContext.curentTime + note.time);
-    osc.stop(audioContext.curentTime + note.time);
-    osc.stop(audioContext.currentTime + note.time + 0.25);
+    currentPattern.forEach((note) => {
+      const osc = createOscillator(note.type);
+      osc.start(audioContext.curentTime + note.time);
+      osc.stop(audioContext.curentTime + note.time);
+      osc.stop(audioContext.currentTime + note.time + 0.25);
+    });
+  };
 
-  });
-  
+  //  EXPORTS
 
-  
+  //  record Audio
+  const recordAudio = () => {
+    // TODO: implement recording functionality
+  };
+
+  //  export MIDI
+
+  const exportMidi = () => {
+    const midi = new Midi();
+    const track = midi.addTrack();
+    currentPattern.forEach((note) => {
+      track.addNote({
+        midi: 60, // Middle C //TODO: need to create a doc with all of the standard MIDIs
+        time: note.time,
+        duration: 0.25,
+      });
+    });
+    const midiData = midi.toArray();
+    const blob = new Blob([midiData], { type: "audio/midi" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sequence.mid"; //TODO: add timestampp to the end of the sequence.mid name
+    a.click();
+  };
+
+  // return
+  // JSX
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h1>Lydia -- The Online Sequencer </h1>
+        <article>
+          <p> Courtey of AJ Javadi </p>
+        </article>
+        <div>
+          <button onClick={generatePattern}>Generate Pattern</button>
+          <button onClick={playPattern}>Play Pattern</button>}
+          <button onClick={recordAudio}>Record Audio</button>}
+          <button onClick={exportMidi}>Export MIDI</button>}
+        </div>
+      </header>
+    </div>
+  );
 };
+
+export default App;
