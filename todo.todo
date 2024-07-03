@@ -1,0 +1,44 @@
+{
+  "todotree": {
+    "tree": [
+      {
+        "key": 1719976745120,
+        "children": [
+          {
+            "key": 1719976765633,
+            "children": [],
+            "todo": {
+              "content": "random quote or idea to help get started",
+              "id": 1719976765633,
+              "level": "default",
+              "done": false,
+              "start": 1719976765633
+            }
+          }
+        ],
+        "todo": {
+          "content": "momentum dash type home page with different background",
+          "id": 1719976745120,
+          "level": "default",
+          "done": false,
+          "start": 1719976745121
+        }
+      }
+    ],
+    "expandKeys": [
+      1719976745120
+    ],
+    "schema": "https://github.com/Saber2pr/vsc-ext-todolist/blob/master/src/api/type.ts#L3",
+    "add_mode": "bottom",
+    "virtual": false,
+    "timelines": [],
+    "showLine": false,
+    "playFontSize": 24,
+    "title": "todo",
+    "autoSort": false,
+    "showEndTime": false,
+    "simpleMode": false,
+    "lang": "en",
+    "version": "1719976786031"
+  }
+}
