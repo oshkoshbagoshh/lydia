@@ -3,7 +3,7 @@
  * @Email: amirjavadi25@gmail.com
  * @Date: 2024-07-02 21:36:57
  * @Last Modified by: AJ Javadi
- * @Last Modified time: 2024-07-02 23:15:20
+ * @Last Modified time: 2024-07-02 23:30:49
  * @Description: file:///Users/aj/sandbox/lydia/src/App.js
  * - create an audio context and oscillators for different waverorms
  */
@@ -73,7 +73,30 @@ const App = () => {
 
   //  record Audio
   const recordAudio = () => {
-    // TODO: implement recording functionality
+    const mediaStreamDestination = audioContext.createMediaStreamDestination();
+    const mediaRecorder = new MediaRecorder(mediaStreamDestination.stream);
+
+    currentPattern.forEach((note) => {
+      const osc = createOscillator(note.type);
+      osc.connect(mediaStreamDestination);
+      osc.start(audioContext.curentTime + note.time);
+      osc.stop(audioContext.curentTime + note.time + 0.25);
+    });
+
+    mediaRecorder.start();
+
+    setTimeout(() => {
+      mediaRecorder.stop();
+    }, 5000); // Record for 5 seconds  //TODO: change to as long as they want
+
+    mediaRecorder.ondataavailable = (e) => {
+      const blob = new Blob([e.data], { type: "audio/wav" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "sequence.wav";
+      a.click();
+    };
   };
 
   //  export MIDI
