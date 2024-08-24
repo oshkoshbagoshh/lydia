@@ -5,7 +5,9 @@ import "./App.css";
 import "./App.scss";
 
 // initialize the app
-const App = () => {
+const App = () => {useEffect(() => {
+  () => {};
+});
   const [audioContext, setAudioContext] = useState(null);
   const [gainNode, setGainNode] = useState(null);
   const [eqNodes, setEqNodes] = useState([]);
@@ -49,18 +51,19 @@ useEffect(function () {
       eq[i - 1].connect(node);
     }
   });
-  filter.connect(eq[eq.length - 1]);
-  delay.connect(filter);
-  reverb.connect(delay);
-  setAudioContext(context);
-  setGainNode(gain);
-  setDelayNode(delay);
-  setFilterNode(filter);
-  setReverbNode(reverb);
-  setEqNodes(eq);
+  // TODO:
+  // filter.connect(eq[eq.length - 1]);
+  // delay.connect(filter);
+  // reverb.connect(delay);
+  // setAudioContext(context);
+  // setGainNode(gain);
+  // setDelayNode(delay);
+  // setFilterNode(filter);
+  // setReverbNode(reverb);
+  // setEqNodes(eq);
 }, []);
-
-useEffect(() => {
+// 
+// useEffect(() => {
   if (gainNode) {
     gainNode.gain.value = gainRef.current.value;
   }
@@ -74,7 +77,7 @@ useEffect(() => {
     // Reverb settings would typically involve loading an impulse response file
     // For simplicity, we are not changing the reverb settings dynamically here
   }
-}, [gainNode, delayNode, filterNode, reverbNode]);
+// }, [gainNode, delayNode, filterNode, reverbNode]);
 
 const createEqNode = (context, frequency) => {
   const eq = context.createBiquadFilter();
